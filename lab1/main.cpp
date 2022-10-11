@@ -1,38 +1,30 @@
-#include <any>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 #include <cmath>
-
-using mojafunkcja_t = std::function<std::string(std::string)>;
-
-void calculate(std::string x, mojafunkcja_t fun) {
-    using namespace std;
-    cout << sin(stod(x)) << endl;
-}
+#include <algorithm>
 
 int main(int argc, char **argv) {
     using namespace std;
-
-    map<string, function<double(vector<double>)>> calculator;
-    calculator["add"] = [](auto arg) {return arg.at(0) + arg.at(1);};
-    calculator["mod"] = [](auto arg) { (int)arg.at(0) % (int)arg.at(1);};
-    calculator["sin"] = [](auto x) { return x.at(0);};
-
-
+    map<string, function<double(vector<double>)> > func;
+    func["add"] = [](auto arg) { return arg.at(0) + arg.at(1); };
+    func["sin"] = [](auto arg) { return sin(arg.at(0)); };
+    func["mod"] = [](auto arg) { return (int) arg.at(0) % (int) arg.at(1); };
     try {
-        vector<string> task_args(argv, argv + argc);
-        vector<string> numbers_args(argv+2, argv+argc);
-        auto selected_f = task_args.at(1);
-        auto x = argumenty.at(2);
-        //calculate(x,calculator.at(selected_f));
-        cout << calculate(x, selected_f) << endl;
+        vector<string> func_args(argv, argv + 2);
+        vector<string> num_args(argv + 2, argv + argc);
+        auto selected_f = func_args.at(1);
+        std::vector<double> doubleVector(num_args.size());
+        std::transform(num_args.begin(), num_args.end(), doubleVector.begin(), [](const std::string &val) {
+            return std::stod(val);
+        });
+        auto result = func.at(selected_f);
+        cout << "Rozwiązanie = " << result(doubleVector);
     } catch (std::out_of_range aor) {
-        cout << "Podaj argument. Dostepne to: ";
-        for (auto [k, v] : calculator) cout << " " << k;
-        cout << endl;
+        cout << "Podaj brakujące argumenty.";
     }
+
     return 0;
 }
