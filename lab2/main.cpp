@@ -1,23 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <functional>
-
-double goal_function(std::vector<double> x) {
-    return 0;
-}
-
-using domain_t = std::vector<double>;
-
-std::random_device rd;
-std::mt19937 mt_generator(rd());
-domain_t hill_climbing(std::function<double(domain_t)>f, domain_t minimal_d, domain_t maximum_d){
-    std::uniform_int_distribution<int> dist(0,9);
-    for(int i = 0; i < minimal_d.size())
-};
-
-//std::vector<double> brute_force(std::function<double(std::vector<double)> f){
-//
-//}
+#include <random>
 /**
  * domain - generate domain points. Throws exception when all the points were returned
  */
@@ -35,16 +19,61 @@ auto brute_force = [](auto f, auto domain) {
     }
     return best_point;
 };
+using domain_t = std::vector<double>;
+std::random_device rd;
+std::mt19937 mt_generator(rd());
 
+domain_t hill_climbing(const std::function<double(domain_t)> &f, domain_t minimal_d, domain_t maximal_d, int max_iterations) {
+    domain_t current_p(minimal_d.size());
+    for (int i = 0; i < minimal_d.size(); i++) {
+        std::uniform_real_distribution<double> dist(minimal_d[i], maximal_d[i]);
+        current_p[i] = dist(mt_generator);
+    }
+    for (int iteration = 0; iteration < max_iterations; iteration++) {
+        domain_t new_p(minimal_d.size());
+        for (int i = 0; i < minimal_d.size(); i++) {
+            std::uniform_real_distribution<double> dist(-1.0/128.0, 1.0/128.0);
+            new_p[i] = current_p[i] + dist(mt_generator);
+        }
+        if (f(current_p) > f(new_p)) {
+            current_p = new_p;
+        }
+    }
+    return current_p;
+}
 int main() {
-    auto sphere_f = [](double x) { return x * x; };
+    //sfera
+    auto sphere_f = [](double x) {return x*x;};
     double current_sphere_x = -10;
     auto sphere_generator = [&]() {
-        current_sphere_x += 1.0/128.0;
+        current_sphere_x+= 1.0/128.0;
         if (current_sphere_x >= 10) throw std::invalid_argument("finished");
         return current_sphere_x;
     };
     auto best_point = brute_force(sphere_f, sphere_generator);
     std::cout << "best x = " << best_point << std::endl;
+    auto sphere_f_v = [](domain_t x) {return x[0]*x[0];};
+    auto best2 = hill_climbing(sphere_f_v, {-10},{10},10000);
+    std::cout << "best x = " << best2[0] << std::endl;
+    //Beale
+
+    /*auto beale_f = [](double x, double y) {
+        (1.5-x+x*y)*(1.5-x+x*y)+(2.25-x+x*(y*y))*(2.25-x+x*(y*y))+(2.625-x+x*(y*y*y))*(2.625-x+x*(y*y*y));
+    };
+    double current_beale_x = -4;
+    double current_beale_y = -4;
+    auto beale_generator[&](){
+        current_beale_x = -3;
+        current_beale_y = -3;
+        if(currentb);
+        return current
+    };*/
+
+    /*auto beale_f_v = [](domain_t x, domain_t y) {
+        (1.5-x[0]+x[0]*y[0])*(1.5-x[0]+x[0]*y[0])+(2.25-x[0]+x[0]*(y[0]*y[0]))*(2.25-x[0]+x[0]*(y[0]*y[0]))+
+        (2.625-x[0]+x[0]*(y[0]*y[0]*y[0]))*(2.625-x[0]+x[0]*(y[0]*y[0]*y[0]))
+    };
+    auto best_beale = hill_climbing(beale_f_v, {-10},{10},10000);
+    */
     return 0;
 }
