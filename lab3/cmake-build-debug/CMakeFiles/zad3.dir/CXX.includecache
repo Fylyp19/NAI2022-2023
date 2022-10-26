@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Filip/CLionProjects/zad3/main.cpp
+functional
+-
+iostream
+-
+list
+-
+optional
+-
+random
+-
+vector
+-
+string
+-
+math.h
+-
+
