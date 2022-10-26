@@ -1,6 +1,5 @@
 #include <functional>
 #include <iostream>
-#include <list>
 #include <optional>
 #include <random>
 #include <vector>
@@ -69,14 +68,14 @@ double calc(double best, double neighbour, int iter) {
 
 domain_t simulated_annealing_method(
         const std::function<double(domain_t)> &f, domain_t start_point,
-        std::function<std::vector<domain_t>(domain_t)> get_close_points,
+        std::function<std::vector<domain_t>(domain_t)> get_close_distribution_points,
         int max_iterations) {
     using namespace std;
     domain_t best_p = start_point;
     double uk = get_random_cud_variable(best_p);
     for (int iteration = 1; iteration < max_iterations; iteration++) {
-        domain_t best_neighbour = std::vector<double>(uk);
-        std::transform (best_p.begin(), best_p.end(), best_neighbour.begin(), best_p.begin(), std::plus<double>());
+        auto close_points = get_close_distribution_points(best_p);
+        auto best_neighbour = *std::min_element(close_points.begin(), close_points.end(), [f](auto a, auto b){return f(a) > f(b);});
         if (f(best_neighbour) <= f(best_p)) {
             best_p = best_neighbour;
         } else {
@@ -168,7 +167,12 @@ int main(int argc, char **argv) {
             std::uniform_real_distribution<double> distr(min, max);
             return {{distr(mt_generator), distr(mt_generator)}};
         };
-        const double precision = 1.0 / 128;
+        auto get_close_distribution_points = [](domain_t p0) -> std::vector<domain_t> {
+            std::normal_distribution<double> distr(0,1);
+            return {{p0[0] + distr(mt_generator), p0[1] + distr(mt_generator)}};
+        };
+
+        const double precision = 1.0 / 256;
         auto numbers_f_generator = [precision, &min, &max]() -> std::optional<domain_t> {
             static domain_t p = {min, min};
             int i = 0;
@@ -184,27 +188,19 @@ int main(int argc, char **argv) {
         std::cout << "# hill climbing x = " << best0[0] << " " << best0[1] << std::endl;
 
         auto best1 =
-                simulated_annealing_method(numbers_f_v, get_random_point(), get_close_points_random, iterations);
+                simulated_annealing_method(numbers_f_v, get_random_point(), get_close_distribution_points, iterations);
         std::cout << "# simulated annealing x = " << best1[0] << " " << best1[1] << std::endl;
 
-
-        auto best3 = brute_force_method(numbers_f_v, numbers_f_generator);
-        std::cout << "# brute x = " << best3[0] << " " << best3[1] << std::endl;
+        auto best2 =
+                brute_force_method(numbers_f_v, numbers_f_generator);
+        std::cout << "# brute x = " << best2[0] << " " << best2[1] << std::endl;
 
         return 0;
     } catch (std::out_of_range aor) {
         cout << "Uzupełnij";
     }
 
-    //Beale działa
-    //Booth działa
-    //Matyas działa
-
-    /*Beale Zakres [-4.5,4.5]
-    double beale_x = 3;
-    double beale_y = 0.5;
-    cout << beale(beale_x, beale_y) << endl;
-
+    /*
     Himmelblau Zakres [-5,5]
     double himmelblau_x = {3, -2.805118, -3.779310, 3.584428};
     double himmelblau_y = {2, 3.131312, -3.283186, -1.848126};
@@ -217,42 +213,6 @@ int main(int argc, char **argv) {
     double booth_x = 1;
     double booth_y = 3;
     cout << booth(booth_x, booth_y) << endl;
-
-    Matyas Zakres [-10, 10]
-    double matyas_x = 0;
-    double matyas_y = 0;
-    cout << matyas(matyas_x, matyas_y) << endl;
-     */
+    */
 
 }
-
-//Brudnopis
-/*
- * auto sphere_f_v = [](domain_t x) { return x[0] * x[0] + x[1] * x[1]; };
-    auto sphere_f_generator = [precision]() -> std::optional<domain_t> {
-        static domain_t p = {-10, -10};
-        int i = 0;
-        for (i; i < p.size(); i++) {
-            p[i] = p[i] + precision;
-            if (p[i] < 10) return std::optional(p);
-            p[i] = -10;
-        }
-        return {};
-    };
-
- auto get_close_points_random = [](domain_t p0) -> std::vector<domain_t> {
-        std::uniform_real_distribution<double> distr(-10, 10);
-        return {{distr(mt_generator), distr(mt_generator)}};
-    };
-    const double precision = 1.0 / 16;
-
-     auto best0 =
-            tabu_method(rastrigin_f_v, get_random_point(), get_close_points, 1000);
-    std::cout << "# tabu x = " << best0[0] << " " << best0[1] << std::endl;
-    auto best1 = hill_climbing(sphere_f_v, get_random_point(),
-     get_close_points_random, 1000000);
-     std::cout << "# hill_climbing x = " << best1[0] << " " << best1[1] <<
-     std::endl; auto best2 = brute_force_method(sphere_f_v,
-     sphere_f_generator); std::cout << "# hill_climbing x = " << best2[0] << "
-     " << best2[1] << std::endl;
-    */
