@@ -122,6 +122,7 @@ double matyas(double x, double y) {
     return 0.26 * (pow(x, 2) + pow(y, 2)) - 0.48 * x * y;
 }
 
+
 double himmelblau(double x, double y) {
     double part_one = pow(pow(x,2)+y-11,2);
     double part_two = pow(x+pow(y,2)-7,2);
@@ -168,11 +169,11 @@ int main(int argc, char **argv) {
             return {{distr(mt_generator), distr(mt_generator)}};
         };
         auto get_close_distribution_points = [](domain_t p0) -> std::vector<domain_t> {
-            std::normal_distribution<double> distr(0,1);
+            std::normal_distribution<double> distr(-1.0,1.0);
             return {{p0[0] + distr(mt_generator), p0[1] + distr(mt_generator)}};
         };
 
-        const double precision = 1.0 / 256;
+        const double precision = 1.0 / 128;
         auto numbers_f_generator = [precision, &min, &max]() -> std::optional<domain_t> {
             static domain_t p = {min, min};
             int i = 0;
