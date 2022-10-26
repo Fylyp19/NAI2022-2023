@@ -73,14 +73,13 @@ domain_t simulated_annealing_method(
         int max_iterations) {
     using namespace std;
     domain_t best_p = start_point;
+    double uk = get_random_cud_variable(best_p);
     for (int iteration = 1; iteration < max_iterations; iteration++) {
-        auto close_points = get_close_points(best_p);
-        auto best_neighbour = *min_element(close_points.begin(), close_points.end(),
-                                           [f](auto a, auto b) { return f(a) < f(b); });
+        domain_t best_neighbour = std::vector<double>(uk);
+        std::transform (best_p.begin(), best_p.end(), best_neighbour.begin(), best_p.begin(), std::plus<double>());
         if (f(best_neighbour) <= f(best_p)) {
             best_p = best_neighbour;
         } else {
-            double uk = get_random_cud_variable(best_p);
             if (uk < calc(f(best_p), f(best_neighbour), iteration)) {
                 best_p = best_neighbour;
             }
@@ -88,44 +87,6 @@ domain_t simulated_annealing_method(
     }
     return best_p;
 
-}
-
-/**
- * @brief calculate minimum point using hill climbing algorithm
- *
- * @param f goal function
- * @param start_point the start point for calculations
- * @param get_close_points function generating neighbours
- * @param max_iterations number of iterations
- * @return domain_t the domain ponint where the function f has minimum
- */
-domain_t tabu_method(
-        const std::function<double(domain_t)> &f, domain_t start_point,
-        std::function<std::vector<domain_t>(domain_t)> get_close_points,
-        int max_iterations) {
-    using namespace std;
-    domain_t best_point = start_point;
-    list<domain_t> tabu_list = {start_point};
-    for (int iteration = 0; iteration < max_iterations; iteration++) {
-        //cout << iteration << " " << tabu_list.back() << " " << f(tabu_list.back()) << endl;
-        for (auto tabu_i = tabu_list.rbegin(); tabu_i != tabu_list.rend();
-             tabu_i++) {
-            auto close_points_all = get_close_points(*tabu_i);
-            vector<domain_t> close_points;
-            copy_if(close_points_all.begin(), close_points_all.end(),
-                    back_inserter(close_points), [&](auto p) {
-                        return !count(tabu_list.begin(), tabu_list.end(), p);
-                    });
-            if (close_points.size() != 0) {
-                tabu_list.push_back(
-                        *min_element(close_points.begin(), close_points.end(),
-                                     [f](auto a, auto b) { return f(a) < f(b); }));
-                break;
-            }
-        }
-        if (f(best_point) > f(tabu_list.back())) best_point = tabu_list.back();
-    }
-    return best_point;
 }
 
 /**
@@ -207,7 +168,7 @@ int main(int argc, char **argv) {
             std::uniform_real_distribution<double> distr(min, max);
             return {{distr(mt_generator), distr(mt_generator)}};
         };
-        const double precision = 1.0 / 16;
+        const double precision = 1.0 / 128;
         auto numbers_f_generator = [precision, &min, &max]() -> std::optional<domain_t> {
             static domain_t p = {min, min};
             int i = 0;
@@ -223,12 +184,9 @@ int main(int argc, char **argv) {
         std::cout << "# hill climbing x = " << best0[0] << " " << best0[1] << std::endl;
 
         auto best1 =
-                tabu_method(numbers_f_v, get_random_point(), get_close_points_random, iterations);
-        std::cout << "# tabu = " << best1[0] << " " << best1[1] << std::endl;
-
-        auto best2 =
                 simulated_annealing_method(numbers_f_v, get_random_point(), get_close_points_random, iterations);
-        std::cout << "# simulated annealing x = " << best2[0] << " " << best2[1] << std::endl;
+        std::cout << "# simulated annealing x = " << best1[0] << " " << best1[1] << std::endl;
+
 
         auto best3 = brute_force_method(numbers_f_v, numbers_f_generator);
         std::cout << "# brute x = " << best3[0] << " " << best3[1] << std::endl;
@@ -247,6 +205,13 @@ int main(int argc, char **argv) {
     double beale_y = 0.5;
     cout << beale(beale_x, beale_y) << endl;
 
+    Himmelblau Zakres [-5,5]
+    double himmelblau_x = {3, -2.805118, -3.779310, 3.584428};
+    double himmelblau_y = {2, 3.131312, -3.283186, -1.848126};
+
+    Cross-in-tray [-10,10]
+    double cross-in-tray_x = {1.34941, 1.34941, -1.34941, -1.34941};
+    double cross-in-tray_y = {-1.34941, 1.34941, 1.34941,- 1.34941};
 
     Booth Zakres [-10,10]
     double booth_x = 1;
@@ -257,14 +222,6 @@ int main(int argc, char **argv) {
     double matyas_x = 0;
     double matyas_y = 0;
     cout << matyas(matyas_x, matyas_y) << endl;
-
-    Himmelblau Zakres [-5,5]
-    double himmelblau_x = {3, -2.805118, -3.779310, 3.584428};
-    double himmelblau_y = {2, 3.131312, -3.283186, -1.848126};
-
-    Cross-in-tray [-10,10]
-    double cross-in-tray_x = {1.34941, 1.34941, -1.34941, -1.34941};
-    double cross-in-tray_y = {-1.34941,1.34941,1.34941,-1.34941};
      */
 
 }
