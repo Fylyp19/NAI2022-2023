@@ -46,7 +46,7 @@ string v_to_str(vector<int> v){
     return s.substr(0,s.length());
 }
 
-string dec_str_to_int(string s){
+string bi_str_to_dec_str(string s){
     unsigned long long dec_numb = std::stoull(s,0,2);
     return to_string(dec_numb);
 }
@@ -61,17 +61,17 @@ std::vector<double> geno_to_feno(std::vector<int> geno){
     vector<int> s_w_v;
     vector<int> s_f_v;
 
-    f_w_v.insert(f_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+10));
-    geno.erase(geno.begin(), geno.begin()+10);
+    f_w_v.insert(f_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+9));
+    geno.erase(geno.begin(), geno.begin()+9);
 
-    f_f_v.insert(f_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+41));
-    geno.erase(geno.begin(), geno.begin()+41);
+    f_f_v.insert(f_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+42));
+    geno.erase(geno.begin(), geno.begin()+42);
 
-    s_w_v.insert(s_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+10));
-    geno.erase(geno.begin(), geno.begin()+10);
+    s_w_v.insert(s_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+9));
+    geno.erase(geno.begin(), geno.begin()+9);
 
-    s_f_v.insert(s_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+41));
-    geno.erase(geno.begin(), geno.begin()+41);
+    s_f_v.insert(s_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+42));
+    geno.erase(geno.begin(), geno.begin()+42);
 
     cout << v_to_str(f_w_v) << endl;
     cout << v_to_str(f_f_v)<< endl;
@@ -79,13 +79,13 @@ std::vector<double> geno_to_feno(std::vector<int> geno){
     cout << v_to_str(s_f_v)<< endl;
 
 
-    string f_w_int = dec_str_to_int(v_to_str(f_w_v));
+    string f_w_int = bi_str_to_dec_str(v_to_str(f_w_v));
     cout << f_w_int << endl;
-    string f_f_int = dec_str_to_int(v_to_str(f_f_v));
+    string f_f_int = bi_str_to_dec_str(v_to_str(f_f_v));
     cout << f_f_int << endl;
-    string s_w_int = dec_str_to_int(v_to_str(s_w_v));
+    string s_w_int = bi_str_to_dec_str(v_to_str(s_w_v));
     cout << s_w_int << endl;
-    string s_f_int = dec_str_to_int(v_to_str(s_f_v));
+    string s_f_int = bi_str_to_dec_str(v_to_str(s_f_v));
     cout << s_f_int << endl;
 
     double f = stod(f_w_int+'.'+f_f_int);
@@ -105,12 +105,14 @@ double eggholder(double x1, double x2) {
 }
 
 std::vector<double> fitness_function(population_t pop) {
-    vector<int> geno = pop[0];
-    vector<double> feno = geno_to_feno(geno);
-    double egg = eggholder(feno[0],feno[1]);
-    cout << -1*egg << endl;
-    vector<double> result;
-    result.push_back(-1*egg);
+    std::vector<double> result;
+    for(vector<int> part: pop) {
+        vector<int> geno = part;
+        vector<double> feno = geno_to_feno(geno);
+        double egg = eggholder(feno[0], feno[1]);
+        result.push_back((512 - abs(egg)) * 0.001);
+        cout << result[0] << endl;
+    }
     return result;
 }
 
@@ -154,9 +156,6 @@ int main() {
         std::cout << i;
     }
 
-
-
-
     cout << endl;
     cout << endl;
 
@@ -173,13 +172,13 @@ int main() {
                                     selection_empty, 1.0,
                                     crossover_empty,
                                     0.01, mutation_empty);
-    for (chromosome_t chromosome: result) {
+    /*for (chromosome_t chromosome: result) {
         cout << "[";
         for (int p: chromosome) {
             cout << p;
         }
         cout << "] ";
-    }
+    }*/
 
     return 0;
 }
