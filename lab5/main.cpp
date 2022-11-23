@@ -5,6 +5,7 @@
 #include <random>
 #include <vector>
 #include <cassert>
+#include <sstream>
 
 std::random_device rd;
 std::mt19937 mt_generator(rd());
@@ -64,25 +65,27 @@ int selection_tournament_2(std::vector<double> fitnesses) {
 }
 
 int selection_roulette(std::vector<double> fitnesses) {
-    std::uniform_int_distribution<int> uniform(0, fitnesses.size()-1);
-    int sum_of_f;
+    using namespace std;
+    double sum_of_f;
     for(int i = 0; i < fitnesses.size(); i++){
         sum_of_f += fitnesses[i];
     }
+    cout << sum_of_f << endl;
     std::vector<int> p_chromosom;
     for(int i = 0; i < fitnesses.size(); i++){
         p_chromosom.push_back((fitnesses[i])/sum_of_f);
     }
-    int a = uniform(mt_generator);
+    std::uniform_int_distribution<int> uniform(0, sum_of_f);
+    double a = uniform(mt_generator);
     int offset_down, offset_up;
     int pick = 0;
     for(int i = 0; i < fitnesses.size(); i++){
-        offset_down += p_chromosom[i];
+        offset_up +=  p_chromosom[i];
         if(offset_down < a && a < offset_up){
             pick = i;
             break;
         }
-        offset_up += p_chromosom[i];
+        offset_down += p_chromosom[i];
     }
     return fitnesses[pick];
 }
@@ -143,7 +146,7 @@ chromosome_t mutation_many_points(const chromosome_t parent, double p_mutation) 
             child[l] = 1 - child[l];
         }
         return child;
-        } else{
+    } else{
         return parent;
     }
 }
@@ -184,6 +187,87 @@ std::ostream &operator<<(std::ostream &o,
     }
     return o;
 }
+
+std::string v_to_str(std::vector<int> v) {
+    using namespace std;
+    stringstream ss;
+    copy(v.begin(), v.end(), std::ostream_iterator<int>(ss, ""));
+    string s = ss.str();
+    return s.substr(0, s.length());
+}
+
+std::string bi_str_to_dec_str(std::string s){
+    using namespace std;
+    unsigned long long dec_numb = stoull(s,0,2);
+    return to_string(dec_numb);
+}
+
+/*
+std::vector<double> geno_to_feno(const chromosome_t &chromosome){
+    using namespace std;
+    vector<int> geno = chromosome.;
+
+    vector<double> d_v;
+
+    vector<int> f_w_v;
+    vector<int> f_f_v;
+    vector<int> s_w_v;
+    vector<int> s_f_v;
+
+    f_w_v.insert(f_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+9));
+    geno.erase(geno.begin(), geno.begin()+9);
+
+    f_f_v.insert(f_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+42));
+    geno.erase(geno.begin(), geno.begin()+42);
+
+    s_w_v.insert(s_w_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+9));
+    geno.erase(geno.begin(), geno.begin()+9);
+
+    s_f_v.insert(s_f_v.end(), make_move_iterator(geno.begin()),make_move_iterator(geno.begin()+42));
+    geno.erase(geno.begin(), geno.begin()+42);
+
+    cout << v_to_str(f_w_v) << endl;
+    cout << v_to_str(f_f_v)<< endl;
+    cout << v_to_str(s_w_v) << endl;
+    cout << v_to_str(s_f_v)<< endl;
+
+
+    string f_w_int = bi_str_to_dec_str(v_to_str(f_w_v));
+    cout << f_w_int << endl;
+    string f_f_int = bi_str_to_dec_str(v_to_str(f_f_v));
+    cout << f_f_int << endl;
+    string s_w_int = bi_str_to_dec_str(v_to_str(s_w_v));
+    cout << s_w_int << endl;
+    string s_f_int = bi_str_to_dec_str(v_to_str(s_f_v));
+    cout << s_f_int << endl;
+
+    double f = stod(f_w_int+'.'+f_f_int);
+    double s = stod(s_w_int+'.'+s_f_int);
+
+    d_v.push_back(f);
+    d_v.push_back(s);
+
+    return d_v;
+}
+
+double eggholder(double x1, double x2) {
+
+    double term1 = -(x2+47) * sin(sqrt(abs(x2+x1/2+47)));
+    double term2 = x1 * sin(sqrt(abs(x1-(x2+47))));
+    return term1 - term2;
+}
+double my_fitness(const chromosome_t &chromosome) {
+    using namespace std;
+    double result;
+    auto geno = chromosome;
+    vector<double> feno = geno_to_feno(geno);
+    double egg = eggholder(feno[0], feno[1]);
+    cout << egg;
+    //result.push_back((512 - abs(egg)) * 0.001);
+    result =(512 - abs(egg)) * 0.001;
+    cout << result;
+    return std::accumulate(chromosome.begin(), chromosome.end(), result);
+}*/
 int main() {
     using namespace std;
     population_t population = generate_initial_population(10);
@@ -195,7 +279,7 @@ int main() {
                 cout << i << ": " << make_pair(a, fitness_function) << endl;
                 return i > 49;
             },
-            selection_roulette, 0.5, crossover_one_point, 0.25, mutation_many_points);
+            selection_roulette, 0.5, crossover_one_point, 0.01, mutation_many_points);
     cout << make_pair(result, fitness_function);
     cout << endl;
     return 0;

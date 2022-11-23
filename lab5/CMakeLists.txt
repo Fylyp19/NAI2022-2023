@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.20)
-project(lab05)
+cmake_minimum_required(VERSION 3.23)
+project(lab5)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
-add_executable(lab05 main.cpp)
+add_executable(lab5 main.cpp)
