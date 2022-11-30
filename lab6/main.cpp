@@ -303,8 +303,8 @@ double my_fitness(const chromosome_t &chromosome) {
     auto geno = chromosome;
     vector<double> feno = geno_to_feno(geno);
     double egg = eggholder(feno[0], feno[1]);
-    cout << egg << endl;
-    result = abs((512 - abs(egg))) * 0.01;
+    result = abs((512 - abs(egg))) * 0.001;
+    cout << result << endl;
     return result;
 }
 
