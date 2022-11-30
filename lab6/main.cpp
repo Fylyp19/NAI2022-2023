@@ -51,9 +51,9 @@ population_t genetic_algorithm(population_t initial_population,
                   parents_indexes.begin(),
                   [&](auto e) { return selection(population_fit); });
         if(switcher == true) {
-            if(switcher_iter % switcher_iter_v == 0) {
+            //if(switcher_iter % switcher_iter_v == 0) {
                 datas(population_fit);
-            }
+            //}
         }
         switcher_iter++;
         // perform crossover operations
@@ -98,23 +98,18 @@ int selection_roulette(std::vector<double> fitnesses) {
         sum_of_f += fitnesses[i];
     }
     //cout << sum_of_f << endl;
-    std::vector<int> p_chromosom;
-    for(int i = 0; i < fitnesses.size(); i++){
-        p_chromosom.push_back((fitnesses[i])/sum_of_f);
-    }
     std::uniform_int_distribution<int> uniform(0, sum_of_f);
     double a = uniform(mt_generator);
-    int offset_down, offset_up;
+    double offset_down;
     int pick = 0;
     for(int i = 0; i < fitnesses.size(); i++){
-        offset_up +=  p_chromosom[i];
-        if(offset_down < a && a < offset_up){
+        offset_down += fitnesses[i];
+        if(offset_down > a){
             pick = i;
             break;
         }
-        offset_down += p_chromosom[i];
     }
-    return fitnesses[pick];
+    return pick;
 }
 
 std::vector<chromosome_t> crossover_empty(std::vector<chromosome_t> parents) {
@@ -304,7 +299,7 @@ double my_fitness(const chromosome_t &chromosome) {
     vector<double> feno = geno_to_feno(geno);
     double egg = eggholder(feno[0], feno[1]);
     result = abs((512 - abs(egg))) * 0.001;
-    cout << result << endl;
+    //cout << result << endl;
     return result;
 }
 
@@ -338,14 +333,14 @@ int main(int argc, char **argv) {
 
     population_t population = generate_initial_population(size_of_population);
     auto result = genetic_algorithm(
-            population, switch_p, switch_point_v, my_fitness,
+            population, switch_p, switch_point_v, fitness_function ,
             [&iterations](auto a, auto b) {
                 static int i = 0;
                 i++;
-                //cout << i << ": " << make_pair(a, fitness_function) << endl;
+                cout << i << ": " << make_pair(a, fitness_function) << endl;
                 return i >= iterations;
             },
-            selection_tournament_2, p_crossover, crossover_one_point, p_mutation, probabilistic_mutation);
+            selection_roulette, p_crossover, crossover_one_point, p_mutation, probabilistic_mutation);
     cout << make_pair(result, fitness_function);
     cout << endl;
     return 0;
