@@ -7,10 +7,11 @@ using namespace std;
 using namespace cv;
 
 bool compareContours(vector<Point> c1, vector<Point> c2) {
-    double i = fabs(contourArea(Mat(c1)));
-    double j = fabs(contourArea(Mat(c2)));
-    return (i < j);
+    auto i = contourArea(Mat(c1));
+    auto j = contourArea(Mat(c2));
+    return (fabs(i) < fabs(j));
 }
+
 std::vector<int> lower = {100,100,100};
 std::vector<int> upper = {255, 255, 255};
 
