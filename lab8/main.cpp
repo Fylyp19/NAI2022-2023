@@ -1,60 +1,72 @@
-#include <opencv2/opencv.hpp>
-#include <opencv2/highgui.hpp>
 #include <iostream>
+#include <opencv2/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <vector>
-
-// g++ `pkg-config --cflags opencv4` cv2.cpp `pkg-config --libs opencv4`
 
 using namespace std;
 using namespace cv;
 
-int main(int argc, char **argv)
-{
-    std::vector<int> lower = {100,100,125};
-    std::vector<int> upper = {255,255,255};
-    VideoCapture cap1(0);
-    if (!cap1.isOpened())
+bool compareContours(vector<Point> c1, vector<Point> c2) {
+    double i = fabs(contourArea(Mat(c1)));
+    double j = fabs(contourArea(Mat(c2)));
+    return (i < j);
+}
+std::vector<int> lower = {100,100,100};
+std::vector<int> upper = {255, 255, 255};
+
+int main(int argc, char **argv) {
+
+    VideoCapture camera(0);
+    if (!camera.isOpened())
         return -1;
 
-    namedWindow("pierwsze", WINDOW_AUTOSIZE);
-    namedWindow("detected", WINDOW_AUTOSIZE);
+    while (waitKey(1) != 27) {
+        Mat img;
+        camera.read(img);
 
-    while (true)
-    {
-        Mat f1, dst, detected,dilated;
-        cap1.read(f1);
-        cvtColor(f1, dst, COLOR_BGR2HSV);
+        Mat base_img;
+        Mat blue_img;
 
-        inRange(dst, lower,upper, detected);
-        auto kernel = getStructuringElement(MORPH_ELLIPSE,Size{5,5});
-        erode(detected, dilated, kernel);
-        dilate(dilated, dilated, kernel);
+        cvtColor(img, base_img, COLOR_BGR2HSV);
+        inRange(base_img, Scalar(lower[0], lower[1], lower[2]), Scalar(upper[0], upper[1], upper[2]), blue_img);
 
-        for (int y = 0; y < dilated.rows; ++y){
-            for (int x = 0; x < dilated.cols; ++x) {
-                if(dilated.at<Vec3b>(y,x) == [0,0,0])
+        Mat kernel = getStructuringElement(MORPH_ELLIPSE, {1, 1});
+        morphologyEx(blue_img, blue_img, MORPH_CLOSE, kernel);
+
+        Canny(blue_img, blue_img, 100, 100);
+
+        auto mat_kernel = getStructuringElement(MORPH_ELLIPSE, {50, 50});
+        morphologyEx(blue_img, blue_img, MORPH_CLOSE, mat_kernel);
+
+        vector<vector<Point>> conts;
+        findContours(blue_img, conts, RETR_LIST, CHAIN_APPROX_SIMPLE);
+        //drawContours(img, conts, -1, {0, 255, 0}, 2);
+
+        sort(conts.begin(), conts.end(), compareContours);
+
+        if (conts.size() > 1) {
+            vector<Point> first = conts[conts.size() - 1];
+            vector<Point> second = conts[conts.size() - 2];
+
+            auto momentsFirst = moments(first, false);
+            auto momentsSecond = moments(second, false);
+
+            Point p = {(int) (momentsFirst.m10 / momentsFirst.m00), (int) (momentsFirst.m01 / momentsFirst.m00)};
+            Point p_2 = {(int) ((momentsFirst.m10 / momentsFirst.m00) - 5), (int) ((momentsFirst.m01 / momentsFirst.m00) - 5)};
+            Point p_3 = {(int) ((momentsFirst.m10 / momentsFirst.m00) - 10), (int) ((momentsFirst.m01 / momentsFirst.m00) - 10)};
+
+            Point p1 = {(int) (momentsSecond.m10 / momentsSecond.m00), (int) (momentsSecond.m01 / momentsSecond.m00)};
+            Point p1_2 = {(int) ((momentsSecond.m10 / momentsSecond.m00) - 5), (int) ((momentsSecond.m01 / momentsSecond.m00) - 5)};
+            Point p1_3 = {(int) ((momentsSecond.m10 / momentsSecond.m00) - 10), (int) ((momentsSecond.m01 / momentsSecond.m00) - 10)};
+
+
+            line(img, p, p1, cv::Scalar(0, 255, 0), 3, cv::LINE_8);
+            line(img, p_2, p1_2, cv::Scalar(255, 255, 0), 3, cv::LINE_8);
+            line(img, p_3, p1_3, cv::Scalar(0, 255, 255), 3, cv::LINE_8);
+
         }
 
-        /*for (int y = 0; y < input_bgra.rows; ++y) {
-            cv::Vec4b &pixel = input_bgra.at<cv::Vec4b>(y, x)
-            for (int x = 0; x < input_bgra.cols; ++x) {
-                cv::Vec4b &pixel = input_bgra.at<cv::Vec4b>(y, x);
-
-                if (pixel[0] = 1) {
-                    pixel[1] = 122;
-                    pixel[2] = 122;
-                    pixel[3] = 122;
-                }
-            }
-        }
-         */
-
-        imshow("dilated", dilated);
-        if (waitKey(1) == 27)
-            break;
-
-
+        imshow("Draw 3 Lines", img);
     }
-
     return 0;
 }
